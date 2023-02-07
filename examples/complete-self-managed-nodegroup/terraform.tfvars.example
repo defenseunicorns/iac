@@ -11,13 +11,17 @@
   aws_profile                 = "du-dev"  # local AWS profile to be used for deployment
   aws_admin_1_username        = "Bob.Marley" # enables eks access & ssh access to bastion
   aws_admin_2_username        = "Jane.Doe" # enables eks access & ssh access to bastion
+  cidr_blocks                 = ["0.0.0.0/0"] # control access to ingress and egress. IPv4
+  ipv6_cidr_blocks            = ["::/0"] # control access to ingress and egress. IPv6
 
 ###########################################################
 #################### VPC Config ###########################
 
-  vpc_cidr                            = "10.200.0.0/16"
-  vpc_name                            = "my-vpc"
-  # vpc_instance_tenancy                = "dedicated" #does not currently work with EKS
+  vpc_cidr                    = "10.200.0.0/16"
+  vpc_name                    = "my-vpc"
+  map_public_ip_on_launch     = true
+
+  # vpc_instance_tenancy        = "dedicated" #does not currently work with EKS
 
 ###########################################################
 ################## Bastion Config #########################

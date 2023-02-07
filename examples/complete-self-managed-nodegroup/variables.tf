@@ -31,6 +31,16 @@ variable "aws_admin_2_username" {
   type        = string
 }
 
+variable "cidr_blocks" {
+  description = "IPv4 CIDR block to control ingress, egress and security groups"
+  type        = string
+}
+
+variable "ipv6_cidr_blocks" {
+  description = "IPv6 CIDR block to control ingress, egress and security groups"
+  type        = string
+}
+
 ###########################################################
 #################### VPC Config ###########################
 
@@ -55,6 +65,12 @@ variable "create_database_subnet_route_table" {
   description = "Whether to create a database subnet route table"
   type        = bool
   default     = true
+}
+
+variable "map_public_ip_on_launch" {
+  description = "Control whether an instance will receive a public IP address by default."
+  type        = bool
+  default     = false
 }
 
 ###########################################################
@@ -180,4 +196,10 @@ variable "zarf_version" {
   description = "The version of Zarf to use"
   type        = string
   default     = ""
+}
+
+variable "rds_deletion_protection" {
+  description = "Control RDS deletion protection"
+  type        = bool
+  default     = false
 }

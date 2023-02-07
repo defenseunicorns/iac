@@ -65,3 +65,25 @@ variable "database_subnets" {
   type        = list(string)
   default     = []
 }
+
+variable "map_public_ip_on_launch" {
+  description = "Control whether an instance will receive a public IP address by default."
+  type        = bool
+  default     = false
+}
+
+variable "default_acl_rules" {
+  description = "Subnets network ACLs. Only allows port 22 from 10.0.0.0/24 network"
+  type        = list(map(string))
+
+  default = [
+    {
+      rule_number = 100
+      rule_action = "allow"
+      from_port   = 0
+      to_port     = 0
+      protocol    = "22"
+      cidr_block  = "10.0.0.0/24"
+    },
+  ]
+}

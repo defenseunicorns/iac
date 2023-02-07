@@ -121,3 +121,15 @@ variable "automated_backups_replication_enabled" {
   type        = bool
   default     = false
 }
+
+variable "backup_retention_period" {
+  description = "RDS backup retention for clusters in days"
+  type        = string
+  default     = 5
+}
+
+variable "deletion_protection" {
+  description = "Control RDS deletion protection"
+  type        = bool
+  default     = true
+}

@@ -79,6 +79,8 @@ module "eks" {
   control_plane_subnet_ids       = module.vpc.private_subnets
   source_security_group_id       = module.bastion.security_group_ids[0]
   cluster_endpoint_public_access = var.cluster_endpoint_public_access
+  cidr_blocks                    = var.cidr_blocks
+  ipv6_cidr_blocks               = var.ipv6_cidr_blocks
   # cluster_endpoint_private_access       = false
   cluster_kms_key_additional_admin_arns = ["arn:${data.aws_partition.current.partition}:iam::${var.account}:user/${var.aws_admin_1_username}", "arn:${data.aws_partition.current.partition}:iam::${var.account}:user/${var.aws_admin_2_username}"]
   eks_k8s_version                       = var.eks_k8s_version

@@ -77,7 +77,7 @@ module "rds_postgres_keycloak" {
   allocated_storage          = var.kc_db_allocated_storage
   max_allocated_storage      = var.kc_db_max_allocated_storage
   create_db_subnet_group     = true
-  deletion_protection        = false
+  deletion_protection        = var.rds_deletion_protection
   # automated_backups_replication_enabled = true
   tags = local.tags
 }

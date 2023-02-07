@@ -25,6 +25,20 @@ module "vpc" {
   private_subnet_tags = var.private_subnet_tags
   public_subnet_tags  = var.public_subnet_tags
 
+  public_inbound_acl_rules    = var.default_acl_rules
+  public_outbound_acl_rules   = var.default_acl_rules
+  private_inbound_acl_rules   = var.default_acl_rules
+  private_outbound_acl_rules  = var.default_acl_rules
+  database_inbound_acl_rules  = var.default_acl_rules
+  database_outbound_acl_rules = var.default_acl_rules
+
+  # private_subnet_names = ["Private Subnet One", "Private Subnet Two"]
+  # public_subnet_names omitted to show default name generation for all three subnets
+  # database_subnet_names    = ["DB Subnet One"]
+  # elasticache_subnet_names = ["Elasticache Subnet One", "Elasticache Subnet Two"]
+  # redshift_subnet_names    = ["Redshift Subnet One", "Redshift Subnet Two", "Redshift Subnet Three"]
+  # intra_subnet_names       = []
+
   create_database_subnet_group = var.create_database_subnet_group
   instance_tenancy             = var.instance_tenancy
 
@@ -43,6 +57,8 @@ module "vpc" {
 
   enable_nat_gateway = true
   single_nat_gateway = true
+
+  map_public_ip_on_launch = var.map_public_ip_on_launch
 
   # customer_gateways = {
   #   IP1 = {

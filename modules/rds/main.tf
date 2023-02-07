@@ -37,7 +37,7 @@ module "db" {
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
   create_cloudwatch_log_group     = true
 
-  backup_retention_period = 1
+  backup_retention_period = var.backup_retention_period
   skip_final_snapshot     = true
   deletion_protection     = var.deletion_protection
 

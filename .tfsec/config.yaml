@@ -1,0 +1,7 @@
+exclude:
+  - aws-iam-no-policy-wildcards # Wildcards required in addon IAM policies
+  - aws-ec2-require-vpc-flow-logs-for-all-vpcs # Bug in tfsec. See: https://github.com/aquasecurity/tfsec/issues/1941
+  - aws-ec2-no-public-egress-sgr # cidr_blocks not exposed. See: https://github.com/ntwkninja/terraform-aws-eks-blueprints/blob/v4.21.1/main.tf#L21-L79
+  - aws-s3-enable-versioning # Bug: https://github.com/aquasecurity/tfsec/issues/1912
+  - aws-s3-enable-bucket-logging # Bug: https://github.com/aquasecurity/tfsec/issues/1912
+  - aws-rds-enable-deletion-protection
