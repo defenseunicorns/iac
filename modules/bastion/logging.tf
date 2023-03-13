@@ -1,6 +1,6 @@
 # Create a log group for ssh accesss
 resource "aws_cloudwatch_log_group" "ssh-access-log-group" {
-  name              = "/aws/events/ssh-access"
+  name              = "/aws/events/${var.name}-ssh-access"
   retention_in_days = 60
   kms_key_id        = aws_kms_key.ssmkey.arn
 }
@@ -9,7 +9,7 @@ resource "aws_cloudwatch_log_group" "ssh-access-log-group" {
 resource "aws_cloudtrail" "ssh-access" {
   # checkov:skip=CKV_AWS_252: SNS not currently needed
   # checkov:skip=CKV2_AWS_10: Cloudwatch logs already being used with cloudtrail
-  name                       = "ssh-access"
+  name                       = "${var.name}-ssh-access"
   s3_bucket_name             = var.access_log_bucket_name
   kms_key_id                 = aws_kms_key.ssmkey.arn
   is_multi_region_trail      = true
@@ -26,7 +26,7 @@ resource "aws_cloudtrail" "ssh-access" {
 }
 
 resource "aws_cloudwatch_event_rule" "ssh-access" {
-  name        = "ssh-access"
+  name        = "${var.name}-ssh-access"
   description = "filters ssm access logs and sends usable data to a cloudwatch log group"
 
   event_pattern = <<EOF
@@ -43,7 +43,7 @@ EOF
 
 resource "aws_cloudwatch_event_target" "ssm-target" {
   rule      = aws_cloudwatch_event_rule.ssh-access.name
-  target_id = "ssh-access-target"
+  target_id = "${var.name}-ssh-access-target"
   arn       = aws_cloudwatch_log_group.ssh-access-log-group.arn
 }
 
