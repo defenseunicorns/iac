@@ -10,7 +10,7 @@ resource "aws_cloudtrail" "ssh-access" {
   # checkov:skip=CKV_AWS_252: SNS not currently needed
   # checkov:skip=CKV2_AWS_10: Cloudwatch logs already being used with cloudtrail
   name                       = "ssh-access"
-  s3_bucket_name             = var.access_log_bucket_name
+  s3_bucket_name             = aws_s3_bucket.access_log_bucket.id
   kms_key_id                 = aws_kms_key.ssmkey.arn
   is_multi_region_trail      = true
   enable_log_file_validation = true

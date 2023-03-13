@@ -66,20 +66,20 @@ module "bastion" {
     volume_size = "20"
     encrypted   = true
   }
-  name                     = var.bastion_name
-  vpc_id                   = module.vpc.vpc_id
-  subnet_id                = module.vpc.private_subnets[0]
-  aws_region               = var.region
-  access_log_bucket_name   = "${var.bastion_name}-access-logs"
-  bucket_name              = "${var.bastion_name}-session-logs"
-  ssh_user                 = var.bastion_ssh_user
-  ssh_password             = var.bastion_ssh_password
-  assign_public_ip         = false # var.assign_public_ip
-  enable_log_to_s3         = true
-  enable_log_to_cloudwatch = true
-  vpc_endpoints_enabled    = true
-  tenancy                  = var.bastion_tenancy
-  zarf_version             = var.zarf_version
+  name                           = var.bastion_name
+  vpc_id                         = module.vpc.vpc_id
+  subnet_id                      = module.vpc.private_subnets[0]
+  aws_region                     = var.region
+  access_log_bucket_name_prefix  = "${var.bastion_name}-access-logs"
+  session_log_bucket_name_prefix = "${var.bastion_name}-session-logs"
+  ssh_user                       = var.bastion_ssh_user
+  ssh_password                   = var.bastion_ssh_password
+  assign_public_ip               = false # var.assign_public_ip
+  enable_log_to_s3               = true
+  enable_log_to_cloudwatch       = true
+  vpc_endpoints_enabled          = true
+  tenancy                        = var.bastion_tenancy
+  zarf_version                   = var.zarf_version
   tags = {
     Function = "bastion-ssm"
   }

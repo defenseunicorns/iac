@@ -1,5 +1,7 @@
 data "aws_partition" "current" {}
 
+data "aws_caller_identity" "current" {}
+
 data "aws_ami" "amazonlinux2eks" {
   most_recent = true
 
@@ -11,107 +13,42 @@ data "aws_ami" "amazonlinux2eks" {
   owners = ["amazon"]
 }
 
+resource "random_id" "vpc_name" {
+  byte_length = 2
+  prefix      = var.vpc_name_prefix
+}
+
+resource "random_id" "cluster_name" {
+  byte_length = 2
+  prefix      = var.cluster_name_prefix
+}
+
+resource "random_id" "bastion_name" {
+  byte_length = 2
+  prefix      = var.bastion_name_prefix
+}
+
 locals {
+  vpc_name                   = lower(random_id.vpc_name.hex)
+  cluster_name               = lower(random_id.cluster_name.hex)
+  bastion_name               = lower(random_id.bastion_name.hex)
+  loki_s3_bucket_name_prefix = "${lower(random_id.cluster_name.hex)}-loki-s3"
+
+  account = data.aws_caller_identity.current.account_id
+
   tags = {
     Blueprint  = "${replace(basename(path.cwd), "_", "-")}" # tag names based on the directory name
     GithubRepo = "github.com/aws-ia/terraform-aws-eks-blueprints"
   }
-  admin_arns = [for admin_user in var.aws_admin_usernames : "arn:${data.aws_partition.current.partition}:iam::${var.account}:user/${admin_user}"]
+  admin_arns = [for admin_user in var.aws_admin_usernames : "arn:${data.aws_partition.current.partition}:iam::${local.account}:user/${admin_user}"]
   aws_auth_eks_map_users = [for admin_user in var.aws_admin_usernames : {
-    userarn  = "arn:${data.aws_partition.current.partition}:iam::${var.account}:user/${admin_user}"
+    userarn  = "arn:${data.aws_partition.current.partition}:iam::${local.account}:user/${admin_user}"
     username = "${admin_user}"
     groups   = ["system:masters"]
     }
   ]
-}
 
-###########################################################
-####################### VPC ###############################
-
-module "vpc" {
-  # source = "git::https://github.com/defenseunicorns/iac.git//modules/vpc?ref=v<insert tagged version>"
-  source = "../../modules/vpc"
-
-  region             = var.region
-  name               = var.vpc_name
-  vpc_cidr           = var.vpc_cidr
-  azs                = ["${var.region}a", "${var.region}b", "${var.region}c"]
-  public_subnets     = [for k, v in module.vpc.azs : cidrsubnet(module.vpc.vpc_cidr_block, 5, k)]
-  private_subnets    = [for k, v in module.vpc.azs : cidrsubnet(module.vpc.vpc_cidr_block, 5, k + 4)]
-  database_subnets   = [for k, v in module.vpc.azs : cidrsubnet(module.vpc.vpc_cidr_block, 5, k + 8)]
-  single_nat_gateway = true
-  enable_nat_gateway = true
-
-  private_subnet_tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-    "kubernetes.io/role/internal-elb"           = 1
-  }
-  create_database_subnet_group       = true
-  create_database_subnet_route_table = true
-
-  instance_tenancy = var.vpc_instance_tenancy # dedicated tenancy globally set in VPC does not currently work with EKS
-}
-
-###########################################################
-##################### Bastion #############################
-
-module "bastion" {
-  # source = "git::https://github.com/defenseunicorns/iac.git//modules/bastion?ref=v<insert tagged version>"
-  source = "../../modules/bastion"
-
-  ami_id        = var.bastion_ami_id
-  instance_type = var.bastion_instance_type
-  root_volume_config = {
-    volume_type = "gp3"
-    volume_size = "20"
-    encrypted   = true
-  }
-  name                           = var.bastion_name
-  vpc_id                         = module.vpc.vpc_id
-  subnet_id                      = module.vpc.private_subnets[0]
-  aws_region                     = var.region
-  access_log_bucket_name_prefix  = "${var.bastion_name}-access-logs"
-  session_log_bucket_name_prefix = "${var.bastion_name}-session-logs"
-  ssh_user                       = var.bastion_ssh_user
-  ssh_password                   = var.bastion_ssh_password
-  assign_public_ip               = false # var.assign_public_ip
-  enable_log_to_s3               = true
-  enable_log_to_cloudwatch       = true
-  vpc_endpoints_enabled          = true
-  tenancy                        = var.bastion_tenancy
-  zarf_version                   = var.zarf_version
-  tags = {
-    Function = "bastion-ssm"
-  }
-}
-
-###########################################################
-################### EKS Cluster ###########################
-module "eks" {
-  # source = "git::https://github.com/defenseunicorns/iac.git//modules/eks?ref=v<insert tagged version>"
-  source = "../../modules/eks"
-
-  name                                  = var.cluster_name
-  aws_region                            = var.region
-  aws_account                           = var.account
-  vpc_id                                = module.vpc.vpc_id
-  private_subnet_ids                    = module.vpc.private_subnets
-  control_plane_subnet_ids              = module.vpc.private_subnets
-  source_security_group_id              = module.bastion.security_group_ids[0]
-  cluster_endpoint_public_access        = var.cluster_endpoint_public_access
-  cluster_endpoint_private_access       = true
-  cluster_kms_key_additional_admin_arns = local.admin_arns
-  eks_k8s_version                       = var.eks_k8s_version
-  bastion_role_arn                      = module.bastion.bastion_role_arn
-  bastion_role_name                     = module.bastion.bastion_role_name
-  aws_auth_eks_map_users                = local.aws_auth_eks_map_users
-  enable_managed_nodegroups             = true
-
-  #---------------------------------------------------------------
-  # EKS Blueprints - Managed Node Groups
-  #---------------------------------------------------------------
-
-  managed_node_groups = {
+  managed_node_groups = var.enable_managed_nodegroups == false ? tomap({}) : {
     # Managed Node groups with minimum config
     mg5 = {
       node_group_name = "mg5"
@@ -316,6 +253,178 @@ module "eks" {
       }
     }
   }
+
+  self_managed_node_groups = var.enable_managed_nodegroups == true ? tomap({}) : {
+    self_mg1 = {
+      node_group_name        = "self_mg1"
+      subnet_ids             = module.vpc.private_subnets
+      create_launch_template = true
+      launch_template_os     = "amazonlinux2eks" # amazonlinux2eks or bottlerocket or windows
+      custom_ami_id          = ""                # Bring your own custom AMI generated by Packer/ImageBuilder/Puppet etc.
+
+      create_iam_role           = false                                                    # Changing `create_iam_role=false` to bring your own IAM Role
+      iam_role_arn              = module.eks.aws_iam_role_self_managed_ng_arn              # custom IAM role for aws-auth mapping; used when create_iam_role = false
+      iam_instance_profile_name = module.eks.aws_iam_instance_profile_self_managed_ng_name # IAM instance profile name for Launch templates; used when create_iam_role = false
+
+      format_mount_nvme_disk = true
+      public_ip              = false
+      enable_monitoring      = false
+
+      placement = {
+        affinity          = null
+        availability_zone = null
+        group_name        = null
+        host_id           = null
+        tenancy           = var.eks_worker_tenancy
+      }
+
+      enable_metadata_options = false
+
+      pre_userdata = <<-EOT
+        yum install -y amazon-ssm-agent
+        systemctl enable amazon-ssm-agent && systemctl start amazon-ssm-agent
+      EOT
+
+      # bootstrap_extra_args used only when you pass custom_ami_id. Allows you to change the Container Runtime for Nodes
+      # e.g., bootstrap_extra_args="--use-max-pods false --container-runtime containerd"
+      bootstrap_extra_args = "--use-max-pods false"
+
+      block_device_mappings = [
+        {
+          device_name = "/dev/xvda" # mount point to /
+          volume_type = "gp3"
+          volume_size = 50
+        },
+        {
+          device_name = "/dev/xvdf" # mount point to /local1 (it could be local2, depending upon the disks are attached during boot)
+          volume_type = "gp3"
+          volume_size = 80
+          iops        = 3000
+          throughput  = 125
+        },
+        {
+          device_name = "/dev/xvdg" # mount point to /local2 (it could be local1, depending upon the disks are attached during boot)
+          volume_type = "gp3"
+          volume_size = 100
+          iops        = 3000
+          throughput  = 125
+        }
+      ]
+
+      instance_type = "m5.xlarge"
+      desired_size  = 3
+      max_size      = 10
+      min_size      = 3
+      capacity_type = "" # Optional Use this only for SPOT capacity as  capacity_type = "spot"
+
+      k8s_labels = {
+        Environment = "preprod"
+        Zone        = "test"
+      }
+
+      additional_tags = {
+        ExtraTag    = "m5x-on-demand"
+        Name        = "m5x-on-demand"
+        subnet_type = "private"
+      }
+    }
+  }
+}
+
+###########################################################
+####################### VPC ###############################
+
+module "vpc" {
+  # source = "git::https://github.com/defenseunicorns/iac.git//modules/vpc?ref=v<insert tagged version>"
+  source = "../../modules/vpc"
+
+  region             = var.region
+  name               = local.vpc_name
+  vpc_cidr           = var.vpc_cidr
+  azs                = ["${var.region}a", "${var.region}b", "${var.region}c"]
+  public_subnets     = [for k, v in module.vpc.azs : cidrsubnet(module.vpc.vpc_cidr_block, 5, k)]
+  private_subnets    = [for k, v in module.vpc.azs : cidrsubnet(module.vpc.vpc_cidr_block, 5, k + 4)]
+  database_subnets   = [for k, v in module.vpc.azs : cidrsubnet(module.vpc.vpc_cidr_block, 5, k + 8)]
+  single_nat_gateway = true
+  enable_nat_gateway = true
+
+  private_subnet_tags = {
+    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"             = 1
+  }
+  create_database_subnet_group       = true
+  create_database_subnet_route_table = true
+
+  instance_tenancy = var.vpc_instance_tenancy # dedicated tenancy globally set in VPC does not currently work with EKS
+}
+
+###########################################################
+##################### Bastion #############################
+
+data "aws_ami" "amazonlinux2" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm*x86_64-gp2"]
+  }
+
+  owners = ["amazon"]
+}
+
+module "bastion" {
+  # source = "git::https://github.com/defenseunicorns/iac.git//modules/bastion?ref=v<insert tagged version>"
+  source = "../../modules/bastion"
+
+  ami_id        = data.aws_ami.amazonlinux2.id
+  instance_type = var.bastion_instance_type
+  root_volume_config = {
+    volume_type = "gp3"
+    volume_size = "20"
+    encrypted   = true
+  }
+  name                           = local.bastion_name
+  vpc_id                         = module.vpc.vpc_id
+  subnet_id                      = module.vpc.private_subnets[0]
+  aws_region                     = var.region
+  access_log_bucket_name_prefix  = "${local.bastion_name}-accesslogs"
+  session_log_bucket_name_prefix = "${local.bastion_name}-sessionlogs"
+  ssh_user                       = var.bastion_ssh_user
+  ssh_password                   = var.bastion_ssh_password
+  assign_public_ip               = false # var.assign_public_ip
+  enable_log_to_s3               = true
+  enable_log_to_cloudwatch       = true
+  vpc_endpoints_enabled          = true
+  tenancy                        = var.bastion_tenancy
+  zarf_version                   = var.zarf_version
+  tags = {
+    Function = "bastion-ssm"
+  }
+}
+
+###########################################################
+################### EKS Cluster ###########################
+module "eks" {
+  # source = "git::https://github.com/defenseunicorns/iac.git//modules/eks?ref=v<insert tagged version>"
+  source = "../../modules/eks"
+
+  name                                  = local.cluster_name
+  aws_region                            = var.region
+  aws_account                           = local.account
+  vpc_id                                = module.vpc.vpc_id
+  private_subnet_ids                    = module.vpc.private_subnets
+  control_plane_subnet_ids              = module.vpc.private_subnets
+  source_security_group_id              = module.bastion.security_group_ids[0]
+  cluster_endpoint_public_access        = var.cluster_endpoint_public_access
+  cluster_endpoint_private_access       = true
+  cluster_kms_key_additional_admin_arns = local.admin_arns
+  eks_k8s_version                       = var.eks_k8s_version
+  bastion_role_arn                      = module.bastion.bastion_role_arn
+  bastion_role_name                     = module.bastion.bastion_role_name
+  aws_auth_eks_map_users                = local.aws_auth_eks_map_users
+  enable_managed_nodegroups             = var.enable_managed_nodegroups
+  managed_node_groups                   = local.managed_node_groups
+  self_managed_node_groups              = local.self_managed_node_groups
 
   #---------------------------------------------------------------
   # EKS Blueprints - EKS Add-Ons

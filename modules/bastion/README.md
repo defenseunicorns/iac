@@ -96,7 +96,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_access_log_bucket_name"></a> [access\_log\_bucket\_name](#input\_access\_log\_bucket\_name) | Name prefix of S3 bucket to store access logs from session logs bucket | `string` | n/a | yes |
+| <a name="input_access_log_bucket_name_prefix"></a> [access\_log\_bucket\_name\_prefix](#input\_access\_log\_bucket\_name\_prefix) | Name prefix of S3 bucket to store access logs from session logs bucket | `string` | n/a | yes |
 | <a name="input_access_log_expire_days"></a> [access\_log\_expire\_days](#input\_access\_log\_expire\_days) | Number of days to wait before deleting access logs | `number` | `30` | no |
 | <a name="input_acl"></a> [acl](#input\_acl) | The canned ACL to apply. Defaults to 'private' | `string` | `"private"` | no |
 | <a name="input_add_sops_policy"></a> [add\_sops\_policy](#input\_add\_sops\_policy) | value of the policy arn for the cluster sops policy | `bool` | `false` | no |
@@ -108,7 +108,6 @@ No modules.
 | <a name="input_ami_virtualization_type"></a> [ami\_virtualization\_type](#input\_ami\_virtualization\_type) | Filter for AMI using this virtualization type | `string` | `""` | no |
 | <a name="input_assign_public_ip"></a> [assign\_public\_ip](#input\_assign\_public\_ip) | Determines if an instance gets a public IP assigned at launch time | `bool` | `false` | no |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS Region | `string` | n/a | yes |
-| <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Name prefix of S3 bucket to store session logs | `string` | n/a | yes |
 | <a name="input_bucket_public_access_block"></a> [bucket\_public\_access\_block](#input\_bucket\_public\_access\_block) | Toggle to optionally block public s3 access. Defaults to true | `bool` | `true` | no |
 | <a name="input_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#input\_cloudwatch\_log\_group\_name) | Name of the CloudWatch Log Group for storing SSM Session Logs | `string` | `"/ssm/session-logs"` | no |
 | <a name="input_cloudwatch_logs_retention"></a> [cloudwatch\_logs\_retention](#input\_cloudwatch\_logs\_retention) | Number of days to retain Session Logs in CloudWatch | `number` | `30` | no |
@@ -129,7 +128,7 @@ No modules.
 | <a name="input_log_archive_days"></a> [log\_archive\_days](#input\_log\_archive\_days) | Number of days to wait before archiving to Glacier | `number` | `30` | no |
 | <a name="input_log_expire_days"></a> [log\_expire\_days](#input\_log\_expire\_days) | Number of days to wait before deleting | `number` | `365` | no |
 | <a name="input_logging"></a> [logging](#input\_logging) | Map containing access bucket logging configuration. | `map(string)` | `{}` | no |
-| <a name="input_name"></a> [name](#input\_name) | Name of Bastion | `string` | `""` | no |
+| <a name="input_name"></a> [name](#input\_name) | Name of Bastion | `string` | n/a | yes |
 | <a name="input_permissions_boundary"></a> [permissions\_boundary](#input\_permissions\_boundary) | (Optional) The ARN of the policy that is used to set the permissions boundary for the role. | `string` | `null` | no |
 | <a name="input_policy_arns"></a> [policy\_arns](#input\_policy\_arns) | List of IAM policy ARNs to attach to the instance profile | `list(string)` | `[]` | no |
 | <a name="input_policy_content"></a> [policy\_content](#input\_policy\_content) | Policy body. Use this to add a custom policy to your instance profile (Optional) | `string` | `""` | no |
@@ -137,6 +136,7 @@ No modules.
 | <a name="input_role_name"></a> [role\_name](#input\_role\_name) | Name to give IAM role created for instance profile | `string` | `""` | no |
 | <a name="input_root_volume_config"></a> [root\_volume\_config](#input\_root\_volume\_config) | n/a | <pre>object({<br>    volume_type = any<br>    volume_size = any<br>  })</pre> | <pre>{<br>  "volume_size": "20",<br>  "volume_type": "gp3"<br>}</pre> | no |
 | <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | List of security groups to associate with instance | `list(any)` | `[]` | no |
+| <a name="input_session_log_bucket_name_prefix"></a> [session\_log\_bucket\_name\_prefix](#input\_session\_log\_bucket\_name\_prefix) | Name prefix of S3 bucket to store session logs | `string` | n/a | yes |
 | <a name="input_ssh_password"></a> [ssh\_password](#input\_ssh\_password) | Password for SSH access if SSM authentication is enabled | `string` | n/a | yes |
 | <a name="input_ssh_public_key_names"></a> [ssh\_public\_key\_names](#input\_ssh\_public\_key\_names) | n/a | `list(string)` | <pre>[<br>  "user1",<br>  "user2",<br>  "admin"<br>]</pre> | no |
 | <a name="input_ssh_user"></a> [ssh\_user](#input\_ssh\_user) | n/a | `string` | `"ubuntu"` | no |

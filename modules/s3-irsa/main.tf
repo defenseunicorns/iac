@@ -13,7 +13,7 @@ module "s3_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "v3.6.0"
 
-  bucket_prefix           = "${var.cluster_name}-${var.bucket_prefix}"
+  bucket_prefix           = var.name_prefix
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
@@ -74,14 +74,14 @@ data "aws_iam_policy_document" "irsa_policy" {
 
 resource "aws_iam_policy" "irsa_policy" {
   description = "IAM Policy for IRSA"
-  name_prefix = "${var.cluster_name}-${var.policy_name_prefix}"
+  name_prefix = "${var.name_prefix}-${var.policy_name_prefix}"
   policy      = data.aws_iam_policy_document.irsa_policy.json
 }
 
 resource "aws_iam_role" "irsa" {
   count = var.irsa_iam_policies != null ? 1 : 0
 
-  name        = try(coalesce(var.irsa_iam_role_name, format("%s-%s-%s", var.cluster_name, trim(var.kubernetes_service_account, "-*"), "irsa")), null)
+  name        = try(coalesce(var.irsa_iam_role_name, format("%s-%s-%s", var.name_prefix, trim(var.kubernetes_service_account, "-*"), "irsa")), null)
   description = "AWS IAM Role for the Kubernetes service account ${var.kubernetes_service_account}."
   assume_role_policy = jsonencode({
     "Version" : "2012-10-17",
@@ -121,7 +121,7 @@ resource "aws_iam_role_policy_attachment" "irsa" {
 resource "aws_dynamodb_table" "loki_dynamodb" {
   count = var.dynamodb_enabled != null ? 1 : 0
 
-  name         = "${var.cluster_name}-dynamodb_index"
+  name         = "${var.name_prefix}-dynamodb_index"
   hash_key     = "Log_id"
   billing_mode = "PAY_PER_REQUEST"
 
@@ -167,7 +167,7 @@ data "aws_iam_policy_document" "dynamo_irsa_policy" {
 
 resource "aws_iam_policy" "dynamodb_irsa_policy" {
   # count     = var.dynamodb_enabled != null ? 1 : 0
-  name        = "${var.cluster_name}-dynmodb_irsa_policy"
+  name        = "${var.name_prefix}-dynmodb_irsa_policy"
   description = "DynamoDB IAM policy"
   policy      = data.aws_iam_policy_document.dynamo_irsa_policy.json
 }

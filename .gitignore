@@ -3,11 +3,8 @@
 .DS_Store
 
 # Local .terraform directories
-**/.terraform/*
+.terraform/
 *.terraform.*
-
-# except .terraform.lock.hcl
-!.terraform.lock.hcl
 
 # .tfstate files
 *.tfstate
@@ -23,6 +20,10 @@ crash.*.log
 # to change depending on the environment.
 *.tfvars
 *.tfvars.json
+
+# Except ones that we do want to commit because they are used for automated tests
+!examples/complete/fixtures.common.tfvars
+!examples/complete/fixtures.insecure.tfvars
 
 # Ignore override files as they are usually used to override resources locally and so
 # are not checked in

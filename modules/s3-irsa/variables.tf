@@ -1,13 +1,17 @@
 variable "region" {
   description = "AWS Region"
   type        = string
-  default     = ""
+  // TODO: Evaluate whether "" is ever a valid value for this variable. Does this need to be a required variable with a validation that checks against a list of known regions?
+  default = ""
 }
 
-variable "cluster_name" {
-  description = "Name of the cluster"
+variable "name_prefix" {
+  description = "Name prefix for all resources that use a randomized suffix"
   type        = string
-  default     = ""
+  validation {
+    condition     = length(var.name_prefix) <= 37
+    error_message = "Name Prefix may not be longer than 37 characters."
+  }
 }
 
 variable "irsa_iam_policies" {
@@ -57,28 +61,25 @@ variable "kubernetes_service_account" {
   default     = "default"
 }
 
+// TODO: Evaluate whether we need this to be a variable
 variable "policy_name_prefix" {
   description = "IAM Policy name prefix"
   type        = string
   default     = "irsa-policy"
 }
 
-variable "bucket_prefix" {
-  description = "Prefix for the S3 bucket"
-  type        = string
-  default     = "bigbang"
-}
-
 variable "kms_key_alias" {
   description = "KMS key alias"
   type        = string
-  default     = ""
+  // TODO: Evaluate whether "" is ever a valid value for this variable.
+  default = ""
 }
 
 variable "name_dynamodb" {
   description = "Name of DynamoDB table"
   type        = string
-  default     = ""
+  // TODO: Evaluate whether "" is ever a valid value for this variable.
+  default = ""
 }
 
 variable "dynamodb_enabled" {

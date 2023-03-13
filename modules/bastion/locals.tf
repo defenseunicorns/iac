@@ -1,5 +1,7 @@
 locals {
-  role_name     = "${var.name}-role"
+  role_name                 = "${var.name}-role"
+  add_custom_policy_to_role = var.policy_content != null && var.policy_content != ""
+
   bucket_prefix = var.name
 
   # ssh access

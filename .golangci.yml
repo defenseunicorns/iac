@@ -5,8 +5,10 @@ linters:
   disable:
     - exhaustivestruct
     - exhaustruct
+    - gci
     - goerr113
     - gofumpt
+    - goimports
     - gomnd
     - lll
     - nlreturn

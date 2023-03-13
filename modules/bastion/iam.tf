@@ -144,7 +144,7 @@ resource "aws_iam_role_policy_attachment" "bastion-ssm-ec2-access-policy-attach"
 
 # Create custom policy and attachment
 resource "aws_iam_policy" "custom" {
-  count       = local.role_name == "" || var.policy_content == "" ? 0 : 1
+  count       = local.add_custom_policy_to_role ? 1 : 0
   name        = "${local.role_name}-policy"
   path        = "/"
   description = "Custom policy for EC2 instance"
@@ -153,7 +153,7 @@ resource "aws_iam_policy" "custom" {
 }
 
 resource "aws_iam_role_policy_attachment" "custom" {
-  count      = local.role_name == "" || var.policy_content == "" ? 0 : 1
+  count      = local.add_custom_policy_to_role ? 1 : 0
   role       = aws_iam_role.bastion_ssm_role.name
   policy_arn = aws_iam_policy.custom[0].arn
 }
@@ -161,7 +161,7 @@ resource "aws_iam_role_policy_attachment" "custom" {
 # Additional policy attachments if needed
 
 resource "aws_iam_role_policy_attachment" "managed" {
-  count      = local.role_name == "" ? 0 : length(var.policy_arns)
+  count      = length(var.policy_arns)
   role       = aws_iam_role.bastion_ssm_role.name
   policy_arn = var.policy_arns[count.index]
 }
