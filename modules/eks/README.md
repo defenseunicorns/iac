@@ -59,7 +59,7 @@ To view examples for how you can leverage this EKS Module, please see the [examp
 | <a name="input_cluster_kms_key_additional_admin_arns"></a> [cluster\_kms\_key\_additional\_admin\_arns](#input\_cluster\_kms\_key\_additional\_admin\_arns) | List of ARNs of additional users to add to KMS key policy | `list(string)` | `[]` | no |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of cluster - used by Terratest for e2e test automation | `string` | `""` | no |
 | <a name="input_control_plane_subnet_ids"></a> [control\_plane\_subnet\_ids](#input\_control\_plane\_subnet\_ids) | Subnet IDs for control plane | `list(string)` | `[]` | no |
-| <a name="input_eks_k8s_version"></a> [eks\_k8s\_version](#input\_eks\_k8s\_version) | Kubernetes version to use for EKS cluster | `string` | `"1.23"` | no |
+| <a name="input_eks_k8s_version"></a> [eks\_k8s\_version](#input\_eks\_k8s\_version) | The Kubernetes version to use for the EKS cluster | `string` | `"1.23"` | no |
 | <a name="input_enable_eks_cluster_autoscaler"></a> [enable\_eks\_cluster\_autoscaler](#input\_enable\_eks\_cluster\_autoscaler) | Enable Amazon EKS Cluster Autoscaler | `bool` | `false` | no |
 | <a name="input_enable_eks_coredns"></a> [enable\_eks\_coredns](#input\_enable\_eks\_coredns) | Enable Amazon EKS CoreDNS | `bool` | `false` | no |
 | <a name="input_enable_eks_ebs_csi_driver"></a> [enable\_eks\_ebs\_csi\_driver](#input\_enable\_eks\_ebs\_csi\_driver) | Enable Amazon EKS EBS CSI Driver | `bool` | `false` | no |
